@@ -581,16 +581,18 @@ function handleWebScroll(main, navLinks) {
             let top = window.scrollY;
 
             for (const sec of sections) {
-                  let offset = sec.offsetTop - 100;
-                  let height = sec.offsetHeight;
-
                   document.body.classList.toggle("scrolled", top > 100);
 
-                  if (top >= offset && top < offset + height) {
-                        if (sec.id === "about") onVideo();
-                        else onNotVideo();
+                  // Play video on visible
+                  const vidRect = video.getBoundingClientRect();
+                  if (70 < vidRect.top && window.innerHeight - vidRect.height / 2 > vidRect.top) onVideo();
+                  else onNotVideo();
 
-                        // Set active nav link
+                  // Set active nav link depending on section
+                  let offset = sec.offsetTop;
+                  let height = sec.offsetHeight;
+
+                  if (top >= offset && top < offset + height) {
                         for (const link of navLinks) {
                               link.classList.remove("active");
                         }
