@@ -146,6 +146,13 @@ main {
       font-family: Gotham;
 }
 
+@media screen and (min-width: 900px) and (max-aspect-ratio: 1/1) {
+      /* Fix for desktop mode */
+      main section {
+            height: 40vh !important;
+      }
+}
+
 /* Hero Section */
 main #hero {
       position: relative;
@@ -474,7 +481,7 @@ main #hero::after {
 
       main #hero .container .card {
             min-width: 180px;
-            min-height: 40vh;
+            min-height: 350px;
       }
 
       main #hero .container .cta-button {
@@ -571,7 +578,30 @@ main #about p {
       }
 }
 
+@media screen and (min-width: 900px) and (max-aspect-ratio: 1/1) {
+      /* Fix for desktop mode */
+      main section {
+            height: fit-content !important;
+      }
+}
+
 @media (min-width: 900px) {
+      main #about {
+            width: 79%;
+            height: fit-content;
+            margin: 0 auto;
+      }
+
+      main #about .media-container .video-box {
+            max-width: none;
+      }
+
+      main #about .about-content {
+            max-width: none;
+      }
+}
+
+@media (min-width: 1300px) {
       main #about {
             width: 80%;
             max-width: 1600px;
@@ -649,8 +679,9 @@ main #content p {
 @media (min-width: 900px) {
       main #content {
             max-width: 1600px;
-            width: 79%;
-            min-height: 100vh;
+            width: 80%;
+            min-height: fit-content;
+
             padding-top: 100px;
       }
 
@@ -666,8 +697,8 @@ main #content p {
             border-radius: 10px;
 
             margin-top: 20px;
-            padding: 24px;
             box-shadow: 0 4px 30px rgba(0, 0, 0, 0.558);
+            padding: 24px;
             padding-top: 8px;
       }
 
@@ -781,6 +812,10 @@ main #gallery .container .box.loaded > img {
             columns: 4;
             max-width: 700px;
             margin-top: 32px;
+      }
+
+      main #gallery .container .box {
+            max-height: 400px;
       }
 
       main #gallery .title {

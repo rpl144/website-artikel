@@ -523,22 +523,80 @@ function handleGallery() {
 }
 
 function handleWebScroll(main, navLinks) {
+      const video = document.querySelector("main #about .media-container video");
+      const music = (function playSong() {
+            const audio = new Audio();
+            audio.src = "./assets/lofi-song(When I Was A Boy).mp3";
+            audio.type = "audio/mp3";
+
+            audio.addEventListener("error", function () {
+                  audio.src = "./assets/lofi-song(When I Was A Boy).mp3";
+                  audio.type = "audio/mp3";
+            });
+
+            audio.loop = true;
+            audio.autoplay = true;
+
+            audio.play().catch((error) => {
+                  console.log("Error playing the song:", error);
+            });
+
+            return audio;
+      })();
+
+      function onVideo() {
+            debounce(() => {
+                  // Pause the music if it's playing
+                  if (!music.paused) {
+                        music.pause();
+                  }
+                  // Play the video if it's not playing
+                  if (video.paused) {
+                        video.play().catch((error) => {
+                              console.log("Error playing the video:", error);
+                        });
+                  }
+            }, 200)();
+      }
+
+      function onNotVideo() {
+            debounce(() => {
+                  video.currentTime = 0; // Reset video to start
+                  // Play the music if it's not playing
+                  if (music.paused) {
+                        music.play().catch((error) => {
+                              console.log("Error playing the music:", error);
+                        });
+                  }
+                  // Pause the video if it's playing
+                  if (!video.paused) {
+                        video.pause();
+                  }
+            }, 400)();
+      }
+
       const sections = main.children;
 
       window.onscroll = () => {
+            let top = window.scrollY;
+
             for (const sec of sections) {
-                  let top = window.scrollY;
                   let offset = sec.offsetTop - 100;
                   let height = sec.offsetHeight;
 
-                  // Show blur on scroll
                   document.body.classList.toggle("scrolled", top > 100);
 
                   if (top >= offset && top < offset + height) {
+                        if (sec.id === "about") onVideo();
+                        else onNotVideo();
+
+                        // Set active nav link
                         for (const link of navLinks) {
                               link.classList.remove("active");
-                              document.querySelector("nav ul li a[href*=" + sec.id + "]").classList.add("active");
                         }
+
+                        const activeLink = document.querySelector(`nav ul li a[href*=${sec.id}]`);
+                        if (activeLink) activeLink.classList.add("active");
                   }
             }
       };
@@ -556,17 +614,20 @@ function handleWebScroll(main, navLinks) {
             for (const section of Array.from(document.querySelector("main").children)) if (section.className !== "hero") section.style.display = section.dataset.display;
       };
 
-      for (const section of Array.from(main.children))
-            if (section.id !== "hero") {
-                  // store previous value to dataset first
-                  section.dataset.display = section.style.display || "";
-                  section.style.display = "none";
-            }
+      // Ignore if height more biggah
+      if (window.innerWidth < 900 && window.innerWidth < window.innerHeight) {
+            // Hide others on landind page
+            for (const section of Array.from(main.children))
+                  if (section.id !== "hero") {
+                        // store previous value to dataset first
+                        section.dataset.display = section.style.display || "";
+                        section.style.display = "none";
+                  }
+      }
 
       // Handlers
       handleWebScroll(main, navLinks);
       handleUnsupportedScreen();
-      () => {};
       handleCardAnimation();
       handleCtaButton();
       handleGallery();
