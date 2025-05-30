@@ -1,0 +1,805 @@
+:root {
+      --primary-color: #f5f5f5;
+      --secondary-color: #ffffff;
+      --div-color: white;
+      --text-color: #212121;
+      --header-bg-color: rgba(17, 17, 17, 0.5);
+}
+
+* {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+}
+
+html {
+      scroll-behavior: smooth;
+}
+
+body {
+      background: rgb(14, 10, 11);
+}
+
+body.no-scroll {
+      overflow: hidden;
+}
+
+nav {
+      backdrop-filter: blur(20px);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 9099;
+      position: fixed;
+
+      will-change: transform;
+      top: 15px;
+      left: 15px;
+      right: 15px;
+      height: 60px;
+      padding: 10px;
+      background: var(--header-bg-color);
+      border: 2px solid rgba(245, 245, 245, 0.4);
+      border-radius: 10px;
+      font-family: Gotham;
+      transition: transform 500ms ease;
+}
+
+nav ul {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 1%;
+      padding-left: 0;
+      list-style-type: none;
+}
+
+nav ul li a {
+      position: relative;
+      padding: 8px;
+      font-size: 1rem;
+      font-weight: 500;
+      text-decoration: none;
+      display: inline-block;
+      color: #ffffffc5;
+      transition: all 0.3s ease-out;
+}
+
+nav ul li a::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: linear-gradient(11deg, rgb(238, 233, 226) 0%, rgba(255, 248, 237, 0.822) 100%);
+      transition: all 0.3s ease-out;
+      border-radius: 20px;
+      opacity: 0;
+      z-index: -1;
+      pointer-events: none;
+}
+
+nav ul li a.active::before {
+      top: -2px;
+      bottom: -2px;
+      left: -2px;
+      right: -2px;
+      border-radius: 5px;
+      opacity: 1;
+}
+
+nav ul li a.active {
+      color: rgb(19, 19, 19);
+}
+
+@media (min-width: 1020px) {
+      /* big landscape tablets, laptops, and desktops */
+      nav {
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 85px;
+            border: none;
+
+            justify-content: flex-end;
+            border-radius: 0;
+
+            background: none;
+
+            backdrop-filter: blur(0px);
+            transition: all 0.3s ease;
+      }
+      body.scrolled nav {
+            background: rgba(14, 10, 11, 0.5);
+            backdrop-filter: blur(20px);
+      }
+
+      nav ul {
+            padding-right: 20px;
+            gap: 18px;
+      }
+      nav ul li a {
+            font-size: 1.1rem;
+      }
+
+      nav ul li a:hover::before {
+            top: -3px;
+            bottom: -3px;
+            left: -3px;
+            right: -3px;
+            border-radius: 5px;
+            opacity: 0.5;
+      }
+
+      nav ul li a.active::before {
+            opacity: 1;
+      }
+
+      /* nav ul li a:hover {
+            color: rgb(19, 19, 19);
+      } */
+}
+
+main {
+      color: var(--primary-color);
+      font-family: Gotham;
+}
+
+/* Hero Section */
+main #hero {
+      position: relative;
+
+      width: 100%;
+      height: 100vh;
+      min-height: 600px;
+
+      display: flex;
+      justify-content: center;
+      align-items: center;
+
+      overflow: hidden;
+}
+
+main #hero .container {
+      position: relative;
+
+      width: 100%;
+      height: 100%;
+
+      display: grid;
+      grid-template-areas:
+            "title"
+            "card"
+            "cta";
+      grid-template-rows: 15% 55% 10%;
+      grid-template-columns: 1fr;
+      place-items: center;
+      place-content: center;
+
+      z-index: 10;
+}
+
+main #hero .container .title {
+      grid-area: title;
+
+      width: 250px;
+      padding-top: 75px;
+
+      color: var(--primary-color);
+
+      font-size: 3rem;
+      font-family: LeagueSpartan;
+      font-weight: 700;
+
+      text-align: center;
+      text-shadow: 0 4;
+      letter-spacing: -2px;
+
+      user-select: none;
+}
+
+main #hero .container .card-container {
+      position: relative;
+      grid-area: card;
+
+      width: 100%;
+      height: 40vh;
+      min-height: 220px;
+
+      perspective: 800px;
+
+      display: flex;
+      justify-content: center;
+      align-items: center;
+}
+
+main #hero .container .card-container .swipe-tracker {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      z-index: 99;
+
+      display: grid;
+      grid-template-columns: repeat(4, 100%);
+      align-content: center;
+
+      overflow-x: auto;
+
+      scroll-snap-coordinate: 0 0;
+      scroll-snap-points-x: repeat(100%);
+      scroll-snap-type: x mandatory;
+      -webkit-overflow-scrolling: touch;
+
+      scrollbar-width: none;
+}
+
+main #hero .container .card-container .swipe-tracker div {
+      height: 80vh;
+      scroll-snap-align: start;
+      opacity: 0;
+}
+
+main #hero .container .card-container .card {
+      position: absolute;
+      width: 70%;
+      height: 100%;
+
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+      border-radius: 5px;
+
+      user-select: none;
+      overflow: hidden;
+}
+main #hero .container .card-container .card.animate {
+      animation: tilt-n-move-shaking 500ms linear 1 forwards;
+}
+
+main #hero .container .card-container .card img {
+      width: 100%;
+      height: 100%;
+
+      object-fit: cover;
+
+      border: none;
+      border-radius: 0;
+
+      pointer-events: none;
+      user-select: none;
+
+      transition: 500ms ease;
+}
+
+main #hero .container .card-container .dots {
+      position: absolute;
+      bottom: -24px;
+      margin-top: 5%;
+      gap: 7px;
+
+      display: flex;
+      align-items: center;
+}
+
+main #hero .container .card-container .dots .dot {
+      width: 5px;
+      height: 5px;
+
+      background: white;
+      opacity: 0.5;
+
+      border-radius: 99px;
+}
+
+main #hero .container .card-container .dots .active {
+      scale: 1.2;
+      opacity: 1;
+      transition: all 1000ms ease;
+}
+
+main #hero .container .cta-button {
+      grid-area: cta;
+      position: relative;
+
+      width: 200px;
+      height: 40px;
+      z-index: 9;
+
+      background: linear-gradient(11deg, rgb(238, 233, 226) 0%, rgba(255, 236, 208, 0.822) 100%);
+      border-radius: 5px;
+      border: none;
+
+      font-size: 1rem;
+      font-family: Gotham;
+      font-weight: 500;
+      color: var(--text-color);
+
+      user-select: none;
+}
+
+main #hero .container .cta-button::before {
+      content: "";
+      position: absolute;
+      z-index: -5;
+      top: -5px;
+      bottom: -5px;
+      left: -5px;
+      right: -5px;
+      transition: 0.3s ease;
+      animation: breathAnim 3s ease-in-out infinite;
+      border: 2px solid var(--primary-color);
+      border-radius: 10px;
+}
+
+main #hero .background-blur {
+      position: absolute;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      right: 0;
+
+      z-index: -999;
+
+      outline: none;
+      border: none;
+}
+
+main #hero .background-blur img {
+      position: absolute;
+
+      width: 100%;
+      height: 100%;
+
+      object-fit: cover;
+
+      filter: blur(30px);
+      transform: scale(2);
+      transition: all 500ms ease;
+
+      user-select: none;
+      pointer-events: none;
+}
+
+main #hero::after {
+      content: "";
+
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 40vh;
+      z-index: -2;
+
+      background: linear-gradient(to bottom, transparent, rgb(14, 10, 11)); /* match about bg */
+}
+
+@keyframes tilt-n-move-shaking {
+      0% {
+            transform: translate(0, 0) rotate(0deg);
+      }
+      30% {
+            transform: translate(5px, 5px) rotate(5deg);
+      }
+      40% {
+            transform: translate(0, 0) rotate(0eg);
+      }
+      55% {
+            transform: translate(-5px, 5px) rotate(-5deg);
+      }
+      75% {
+            transform: translate(5px, 5px) rotate(5deg);
+      }
+      100% {
+            transform: translate(0, 0) rotate(0deg);
+      }
+}
+
+@keyframes breathAnim {
+      0% {
+            opacity: 0.8;
+      }
+      50% {
+            opacity: 0.2;
+      }
+      100% {
+            opacity: 0.8;
+      }
+}
+
+@media (max-width: 300px) {
+      main #hero {
+            all: unset;
+            padding: 1rem;
+            height: fit-content;
+      }
+
+      main #hero * {
+            margin: 20px !important;
+            padding: 0 !important;
+            max-width: 80vw !important;
+            text-align: start !important;
+            font-size: 20px !important;
+            letter-spacing: 0 !important;
+      }
+}
+
+@media (min-width: 900px) {
+      main #hero .container {
+            width: 78%;
+            max-width: 1400px;
+            padding: 0;
+            margin: 0 40px;
+
+            grid-template-areas:
+                  "title card"
+                  "cta card";
+            grid-template-columns: 1fr 1.5fr;
+            grid-template-rows: auto auto;
+
+            justify-items: start;
+            justify-content: center;
+
+            column-gap: 8%;
+            row-gap: 50px;
+      }
+
+      main #hero .container .title {
+            width: 100%;
+            max-width: 500px;
+
+            margin: 0;
+            padding: 0;
+
+            font-size: 5em;
+            text-align: left;
+      }
+
+      main #hero .container .card-container {
+            justify-self: end;
+
+            width: 80%;
+            height: 80%;
+            max-height: 400px;
+            max-width: 600px;
+            margin: 0;
+            padding-right: 200px;
+      }
+
+      main #hero .container .card-container .card:hover > img {
+            scale: 1.1;
+      }
+
+      main #hero .container .card-container .swipe-tracker {
+            z-index: -5;
+      }
+
+      main #hero .container .card {
+            min-width: 180px;
+            min-height: 40vh;
+      }
+
+      main #hero .container .cta-button {
+            position: relative;
+            margin-left: 5px;
+            font-size: 1.2rem;
+      }
+}
+
+/* About Section */
+@property --angle {
+      syntax: "<angle>";
+      initial-value: 0deg;
+      inherits: false;
+}
+
+main #about {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      flex-direction: column;
+}
+
+main #about .media-container {
+      width: fit-content;
+      margin-top: 100px;
+      padding: 0 20px;
+}
+
+main #about .media-container .video-box {
+      position: relative;
+      width: 100%;
+      max-width: 700px;
+
+      display: flex;
+}
+
+main #about .media-container .video-box video {
+      width: 100%;
+      border-radius: 3px;
+}
+
+main #about .media-container .video-box::before,
+main #about .media-container .video-box::after {
+      content: "";
+
+      position: absolute;
+      top: -2px;
+      bottom: -2px;
+      left: -2px;
+      right: -2px;
+      z-index: -1;
+
+      border-radius: 5px;
+
+      background: conic-gradient(from var(--angle), rgba(255, 236, 208, 0.5), rgb(238, 233, 226) 10%, rgba(255, 236, 208, 0.5) 30%);
+
+      animation: 3s spin linear infinite;
+}
+
+main #about .media-container .video-box::before {
+      filter: blur(2.5rem);
+      opacity: 0.4;
+}
+
+main #about .about-content {
+      width: 100%;
+      max-width: 750px;
+      display: flex;
+      flex-direction: column;
+      margin-top: 40px;
+      padding: 0 24px;
+}
+
+main #about .about-content .title {
+      width: 100%;
+      font-size: 2rem;
+      font-weight: 700;
+}
+
+main #about p {
+      width: 100%;
+      margin-top: 20px;
+      font-weight: 200;
+}
+
+@keyframes spin {
+      from {
+            --angle: 0deg;
+      }
+      to {
+            --angle: 360deg;
+      }
+}
+
+@media (min-width: 900px) {
+      main #about {
+            width: 80%;
+            max-width: 1600px;
+            height: 100vh;
+            margin: 0 auto;
+            justify-content: center;
+            flex-direction: row;
+            gap: 8%;
+      }
+
+      main #about .media-container {
+            margin: 0;
+            padding-right: 0;
+            max-width: fit-content;
+      }
+
+      main #about .media-container .video-box {
+            max-width: 650px;
+      }
+
+      main #about .media-container .video-box::before,
+      main #about .media-container .video-box::after {
+            background: conic-gradient(from var(--angle), rgba(255, 236, 208, 0.2), rgb(238, 233, 226) 10%, rgba(255, 236, 208, 0.2) 30%);
+      }
+
+      main #about .media-container .video-box::before {
+            filter: blur(10rem);
+            opacity: 0.4;
+            scale: 1.2;
+      }
+
+      main #about .about-content {
+            max-width: 600px;
+            margin: 0;
+            padding-left: 0;
+      }
+
+      main #about .about-content .title {
+            margin-top: 0;
+      }
+}
+
+/* Content Section */
+main #content {
+      width: 100%;
+      max-width: 750px;
+
+      margin: 0 auto;
+      padding: 0 24px;
+      padding-top: 65px;
+
+      flex-direction: column;
+}
+
+main #content .title {
+      display: none;
+}
+
+main #content h1 {
+      width: 100%;
+      font-size: 1.5rem;
+      margin-top: 48px;
+      font-weight: 700;
+}
+
+main #content .container h1:first-of-type {
+      margin-top: 0;
+}
+main #content p {
+      width: 100%;
+      margin-top: 15px;
+      font-weight: 200;
+}
+
+@media (min-width: 900px) {
+      main #content {
+            max-width: 1600px;
+            width: 79%;
+            min-height: 100vh;
+            padding-top: 100px;
+      }
+
+      main #content .title {
+            display: block;
+            width: 100%;
+            font-size: 2rem;
+            font-weight: 700;
+      }
+
+      main #content .container {
+            border: 1px solid rgba(255, 255, 255, 0.346);
+            border-radius: 10px;
+
+            margin-top: 20px;
+            padding: 24px;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.558);
+            padding-top: 8px;
+      }
+
+      main #content .container h1:first-of-type {
+            margin-top: 0;
+      }
+}
+
+/* Gallety Section */
+main #gallery {
+      width: 100%;
+      height: 100vh;
+}
+
+main #gallery .lightbox-container {
+      perspective: 2000px;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      display: flex;
+
+      justify-content: center;
+      align-items: center;
+
+      visibility: hidden;
+      z-index: 99;
+
+      will-change: opacity;
+      background: rgba(21, 21, 21, 0.5);
+      margin-left: auto;
+      margin-right: auto;
+}
+
+main #gallery .lightbox-container.visible {
+      visibility: visible;
+}
+
+main #gallery .lightbox-container .lightbox {
+      position: absolute;
+      border-radius: 5px;
+
+      overflow: hidden;
+      scrollbar-width: none;
+
+      pointer-events: none;
+
+      transform: translateZ(0); /* or translate3d(0,0,0) */
+      will-change: transform, top, left, width, height, opacity;
+}
+
+main #gallery .lightbox-container .lightbox img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      user-select: none;
+      pointer-events: none;
+}
+
+main #gallery .title {
+      width: 76%;
+      max-width: 1600px;
+      margin: 0 auto;
+      padding-top: 100px;
+      font-size: 2rem;
+      font-weight: 700;
+}
+
+main #gallery .container {
+      width: 76%;
+      max-width: 1600px;
+      margin: 15px auto;
+      margin-top: 40px;
+      padding: 0px 0px;
+      columns: 5;
+      break-inside: avoid;
+      column-gap: 20px;
+}
+
+main #gallery .container .box {
+      width: 100%;
+      margin-bottom: 15px;
+      border-radius: 5px;
+      display: flex;
+      overflow: hidden;
+      background: #f5f5f53c;
+}
+
+main #gallery .container .box img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      pointer-events: none;
+      user-select: none;
+      opacity: 0;
+      transition: opacity 0.4s ease;
+}
+
+main #gallery .container .box.loaded > img {
+      opacity: 1;
+}
+
+@media (max-width: 900px) {
+      main #gallery {
+            padding-top: 85px;
+      }
+      main #gallery .container {
+            width: calc(100% - 48px);
+            padding-top: 0;
+            columns: 4;
+            max-width: 700px;
+            margin-top: 32px;
+      }
+
+      main #gallery .title {
+            width: calc(100% - 48px);
+            margin: 0 auto;
+            max-width: 700px;
+            padding: 0;
+      }
+}
+
+@media (max-width: 768px) {
+      main #gallery .container {
+            columns: 3;
+            padding-top: 0;
+      }
+}
+
+@media (max-width: 480px) {
+      main #gallery .container {
+            columns: 2;
+      }
+}

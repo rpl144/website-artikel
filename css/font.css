@@ -1,0 +1,34 @@
+@font-face {
+      font-family: Gotham;
+      src: url("../fonts/Gotham-Light.otf");
+      font-weight: normal;
+      font-style: normal;
+}
+
+@font-face {
+      font-family: Gotham;
+      src: url("../fonts/Gotham-Bold.otf");
+      font-weight: bold;
+      font-style: normal;
+}
+
+@font-face {
+      font-family: Gotham;
+      src: url("../fonts/Gotham-Medium.otf");
+      font-weight: 500;
+      font-style: normal;
+}
+
+@font-face {
+      font-family: Gotham;
+      src: url("../fonts/Gotham-Book.otf");
+      font-weight: 200;
+      font-style: normal;
+}
+
+@font-face {
+      font-family: LeagueSpartan;
+      src: url("./../fonts/LeagueSpartan-SemiBold.ttf");
+      font-weight: normal;
+      font-style: normal;
+}
