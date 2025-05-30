@@ -143,7 +143,7 @@ function handleCardAnimation() {
                   bindScrollToTracker();
             } else {
                   cards.forEach((card) => {
-                        const debouncedSelectCard = debounce(selectCard, 100);
+                        const debouncedSelectCard = debounce(selectCard, 200);
 
                         cards.forEach((card) => {
                               card.onclick = () => debouncedSelectCard(card);
@@ -379,7 +379,7 @@ function handleGallery() {
             // wrapped with debounce to avoid hella rapid fire
             gallery.addEventListener("click", debounce(viewPhoto, 100));
 
-            lightboxContainer.addEventListener("click", debounce(closePhoto, 100));
+            lightboxContainer.addEventListener("click", debounce(closePhoto, 200));
 
             document.addEventListener(
                   "keydown",
@@ -544,36 +544,34 @@ function handleWebScroll(main, navLinks) {
             return audio;
       })();
 
-      function onVideo() {
-            debounce(() => {
-                  // Pause the music if it's playing
-                  if (!music.paused) {
-                        music.pause();
-                  }
-                  // Play the video if it's not playing
-                  if (video.paused) {
-                        video.play().catch((error) => {
-                              console.log("Error playing the video:", error);
-                        });
-                  }
-            }, 200)();
-      }
+      video.loop = true;
 
-      function onNotVideo() {
-            debounce(() => {
-                  video.currentTime = 0; // Reset video to start
-                  // Play the music if it's not playing
-                  if (music.paused) {
-                        music.play().catch((error) => {
-                              console.log("Error playing the music:", error);
-                        });
-                  }
-                  // Pause the video if it's playing
-                  if (!video.paused) {
-                        video.pause();
-                  }
-            }, 400)();
-      }
+      const onVideo = debounce(() => {
+            // Pause the music if it's playing
+            if (!music.paused) {
+                  music.pause();
+            }
+            // Play the video if it's not playing
+            if (video.paused) {
+                  video.play().catch((error) => {
+                        console.log("Error playing the video:", error);
+                  });
+            }
+      }, 200);
+
+      const onNotVideo = debounce(() => {
+            video.currentTime = 0; // Reset video to start
+            // Play the music if it's not playing
+            if (music.paused) {
+                  music.play().catch((error) => {
+                        console.log("Error playing the music:", error);
+                  });
+            }
+            // Pause the video if it's playing
+            if (!video.paused) {
+                  video.pause();
+            }
+      }, 100);
 
       const sections = main.children;
 
@@ -584,8 +582,13 @@ function handleWebScroll(main, navLinks) {
                   document.body.classList.toggle("scrolled", top > 100);
 
                   // Play video on visible
+
                   const vidRect = video.getBoundingClientRect();
-                  if (70 < vidRect.top && window.innerHeight - vidRect.height / 2 > vidRect.top) onVideo();
+                  const vidHalfHeight = vidRect.height / 2;
+
+                  console.log(vidHalfHeight);
+
+                  if (-vidHalfHeight < vidRect.top && window.innerHeight - vidHalfHeight > vidRect.top) onVideo();
                   else onNotVideo();
 
                   // Set active nav link depending on section
