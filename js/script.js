@@ -1,15 +1,4 @@
 /* Utils */
-
-function bench(fn, label = "Function") {
-      return (...args) => {
-            const t0 = performance.now();
-            const res = fn(...args);
-            const t1 = performance.now();
-            console.log(`${label} took ${t1 - t0} ms`);
-            return res;
-      };
-}
-
 function lerp(a, b, t) {
       return a + (b - a) * t;
 }
@@ -347,7 +336,6 @@ function handleGallery() {
             const observer = new IntersectionObserver(
                   (entries, observer) => {
                         entries.forEach((entry) => {
-                              console.log(entry.isIntersecting);
                               if (entry.isIntersecting) {
                                     const box = entry.target;
                                     if (box.firstChild) {
@@ -450,9 +438,7 @@ function handleGallery() {
 
             // preload img
             lightbox.children[0].src = img.src;
-            console.log(img.complete);
             if (!img.complete) await new Promise((res) => (img.onload = res));
-            console.log("started");
 
             Object.assign(lightbox.style, {
                   top: `${top}px`,
