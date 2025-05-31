@@ -29,10 +29,9 @@ nav {
       display: flex;
       justify-content: center;
       align-items: center;
-      z-index: 9099;
+      z-index: 9999;
       position: fixed;
 
-      will-change: transform;
       top: 15px;
       left: 15px;
       right: 15px;
@@ -728,18 +727,17 @@ main #gallery .lightbox-container {
       visibility: hidden;
       z-index: 99;
 
-      will-change: opacity;
       background: rgba(21, 21, 21, 0.5);
       margin-left: auto;
       margin-right: auto;
 }
 
-main #gallery .lightbox-container.visible {
-      visibility: visible;
-}
-
 main #gallery .lightbox-container .lightbox {
       position: absolute;
+      top: 0px;
+      left: 0px;
+      width: 0px;
+      height: 0px;
       border-radius: 5px;
 
       overflow: hidden;
@@ -748,7 +746,7 @@ main #gallery .lightbox-container .lightbox {
       pointer-events: none;
 
       transform: translateZ(0); /* or translate3d(0,0,0) */
-      will-change: transform, top, left, width, height, opacity;
+      will-change: transform, top, left, width, height;
 }
 
 main #gallery .lightbox-container .lightbox img {

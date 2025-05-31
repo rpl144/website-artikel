@@ -33,16 +33,7 @@ function newSoundEffect(sounds) {
 
       loadAll();
 
-      // Resume audio context on first interaction
-      window.addEventListener(
-            "pointerdown",
-            () => {
-                  if (audioCtx.state === "suspended") audioCtx.resume();
-            },
-            { once: true }
-      );
-
-      return (name) => {
+      return async (name, vibrate) => {
             if (!ready) return;
             const buffer = buffers[name];
             if (!buffer) return;
@@ -51,6 +42,13 @@ function newSoundEffect(sounds) {
             src.buffer = buffer;
             src.connect(audioCtx.destination);
             src.start(0);
+
+            if (vibrate)
+                  try {
+                        await navigator.vibrate(vibrate);
+                  } catch {
+                        console.log("Can't Vibrate: ", vibrate);
+                  }
       };
 }
 
@@ -96,39 +94,6 @@ function spring(mass, stiffness, velocity, damping) {
       return { duration, solver };
 }
 
-function interpolate(params = { onUpdate, onStop, duration: 1000, easing }) {
-      const start = performance.now();
-      let rafId = null;
-      let destroyed = false;
-      let ease = params.easing ?? ((t) => t);
-
-      function frame(now) {
-            if (destroyed) return;
-
-            let t = (now - start) / params.duration;
-            if (t > 1) t = 1;
-
-            params.onUpdate(ease(t));
-
-            if (t < 1) {
-                  rafId = requestAnimationFrame(frame);
-            } else if (params.onStop) {
-                  params.onStop();
-                  if (rafId !== null) cancelAnimationFrame(rafId);
-            }
-      }
-
-      rafId = requestAnimationFrame(frame);
-
-      return {
-            destroy() {
-                  destroyed = true;
-
-                  if (rafId !== null) cancelAnimationFrame(rafId);
-            },
-      };
-}
-
 function debounce(func, timeout = 300) {
       let timer;
       return (...args) => {
@@ -139,7 +104,72 @@ function debounce(func, timeout = 300) {
       };
 }
 
-/* GLOVBAL */
+// Origin from https://dev.to/josephciullo/supercharge-your-web-animations-optimize-requestanimationframe-like-a-pro-22i5
+
+const interpolate = (function newAnimationManager() {
+      const tasks = new Set();
+
+      const fps = 60; // Target FPS
+
+      let animationId = null; // Store the animation frame ID
+      let lastFrameTime = performance.now();
+
+      const run = (currentTime) => {
+            const deltaTime = currentTime - lastFrameTime;
+
+            // Ensure the tasks only run if enough time has passed to meet the target FPS
+            if (deltaTime > 1000 / fps) {
+                  tasks.forEach((task) => task(currentTime));
+                  lastFrameTime = currentTime;
+            }
+
+            animationId = requestAnimationFrame(run);
+      };
+
+      const addTask = (task) => {
+            tasks.add(task);
+
+            // Start the loop if this is the first task
+            if (tasks.size === 1) animationId = requestAnimationFrame(run);
+      };
+
+      const removeTask = (task) => {
+            tasks.delete(task);
+            if (tasks.size === 0 && animationId !== null) {
+                  cancelAnimationFrame(animationId); // Stop the loop if no tasks remain
+                  animationId = null; // Reset the ID
+            }
+      };
+
+      return (params = { onUpdate, onStop, duration, easing }) => {
+            const ease = params.easing ?? ((t) => t);
+            const start = performance.now();
+            let t = 0;
+
+            params.duration = params.duration ?? 1000;
+
+            const task = (now) => {
+                  t = (now - start) / params.duration;
+                  if (t > 1) t = 1; // Avoid t exceeding 1
+
+                  params.onUpdate(ease(t));
+
+                  if (t >= 1) {
+                        if (params.onStop) params.onStop();
+                        removeTask(task);
+                  }
+            };
+
+            addTask(task);
+
+            return {
+                  getProgress: () => t,
+                  destroy: () => removeTask(task),
+            };
+      };
+})();
+
+/* GLOBAL */
 let sfxPlay;
 
 /* Screen Size */
@@ -208,47 +238,45 @@ function handleCardAnimation() {
 
             swipeTracker.scrollTo({ left: swipeTracker.children[currentCard].offsetLeft });
 
-            swipeTracker.addEventListener("scroll", (e) => {
-                  requestAnimationFrame(() => {
-                        let closestIndex = 0;
-                        let minDist = Infinity;
+            swipeTracker.addEventListener("scroll", async (e) => {
+                  let closestIndex = 0;
+                  let minDist = Infinity;
 
-                        for (let i = 0; i < e.target.children.length; i++) {
-                              const cardTracker = e.target.children[i];
-                              const rect = cardTracker.getBoundingClientRect();
-                              const factor = rect.x / rect.width;
+                  for (let i = 0; i < e.target.children.length; i++) {
+                        const cardTracker = e.target.children[i];
+                        const rect = cardTracker.getBoundingClientRect();
+                        const factor = rect.x / rect.width;
 
-                              const card = cards[i];
+                        const card = cards[i];
 
-                              const to = {
-                                    translate: translationOffset * factor,
-                                    scale: 1 + scaleOffset * Math.abs(factor),
-                                    rotate: rotationOffset * factor,
-                                    opacity: 1 + opacityOffset * Math.abs(factor),
-                              };
+                        const to = {
+                              translate: translationOffset * factor,
+                              scale: 1 + scaleOffset * Math.abs(factor),
+                              rotate: rotationOffset * factor,
+                              opacity: 1 + opacityOffset * Math.abs(factor),
+                        };
 
-                              card.style.transform = `translateX(${to.translate}px) rotateY(${to.rotate}deg) scale(${to.scale})`;
-                              card.style.opacity = to.opacity;
-                              card.style.zIndex = cards.length - Math.round(Math.abs(factor));
+                        card.style.transform = `translateX(${to.translate}px) rotateY(${to.rotate}deg) scale(${to.scale})`;
+                        card.style.opacity = to.opacity;
+                        card.style.zIndex = cards.length - Math.round(Math.abs(factor));
 
-                              let progress = 1 - Math.min(Math.abs(factor), 1);
-                              interpolateDot(progress, i);
+                        let progress = 1 - Math.min(Math.abs(factor), 1);
+                        interpolateDot(progress, i);
 
-                              if (rect.x === 0) changeBackgroundBlur();
+                        if (rect.x === 0) changeBackgroundBlur();
 
-                              // find card closest to center
-                              const dist = Math.abs(rect.x);
-                              if (dist < minDist) {
-                                    minDist = dist;
-                                    closestIndex = i;
-                              }
+                        // find card closest to center
+                        const dist = Math.abs(rect.x);
+                        if (dist < minDist) {
+                              minDist = dist;
+                              closestIndex = i;
                         }
+                  }
 
-                        if (closestIndex !== currentCard) {
-                              currentCard = closestIndex;
-                              sfxPlay("cursor");
-                        }
-                  });
+                  if (closestIndex !== currentCard) {
+                        currentCard = closestIndex;
+                        sfxPlay("cursor", [10, 50]);
+                  }
             });
 
             let holdTimeout;
@@ -289,7 +317,7 @@ function handleCardAnimation() {
             prepareCardAnimation(currentCard, firsttime);
 
             interpolate({
-                  onUpdate: (progress) => {
+                  onUpdate: async (progress) => {
                         for (let i = 0; i < cards.length; i++) {
                               const card = cards[i];
 
@@ -361,7 +389,7 @@ function handleCardAnimation() {
 /* Cta-Button */
 function handleCtaButton() {
       document.querySelector("main #hero .cta-button").onclick = () => {
-            sfxPlay("click");
+            sfxPlay("cursor", [10, 5, 20]);
             for (const section of Array.from(document.querySelector("main").children)) if (section.className !== "hero") section.style.display = section.dataset.display;
 
             const about = document.querySelector("main #about");
@@ -391,50 +419,55 @@ function handleGallery() {
 
       (function init() {
             const observer = new IntersectionObserver(
-                  (entries, observer) => {
-                        entries.forEach((entry) => {
-                              if (entry.isIntersecting) {
-                                    const box = entry.target;
-                                    if (box.firstChild) {
-                                          box.classList.add("loaded");
-                                          return;
+                  async (entries) => {
+                        if (animation) return;
+
+                        for (const entry of entries) {
+                              const box = entry.target;
+
+                              if (!entry.isIntersecting) {
+                                    const rect = box.getBoundingClientRect();
+                                    if (rect.bottom < -2000 || rect.top > window.innerHeight + 500) {
+                                          box.classList.remove("loaded");
+                                          box.style.visibility = "hidden";
                                     }
-
-                                    const newImg = document.createElement("img");
-
-                                    newImg.src = box.dataset.imgSrc;
-                                    newImg.alt = box.dataset.imgAlt;
-                                    newImg.loading = "lazy";
-
-                                    box.appendChild(newImg);
-
-                                    const showImg = async () => {
-                                          await sleep(200);
-                                          box.classList.add("loaded");
-
-                                          // stop observing dis box bruh
-                                          // observer.unobserve(box);
-                                    };
-
-                                    if (newImg.complete && newImg.naturalWidth !== 0) {
-                                          showImg();
-                                    } else {
-                                          newImg.onload = showImg;
-                                    }
-                              } else {
-                                    const box = entry.target;
-
-                                    box.classList.remove("loaded");
+                                    continue;
                               }
-                        });
+
+                              if (box.firstChild) {
+                                    box.classList.add("loaded");
+                                    continue;
+                              }
+
+                              box.style.visibility = "visible";
+
+                              const newImg = document.createElement("img");
+
+                              newImg.src = box.dataset.imgSrc;
+                              newImg.alt = box.dataset.imgAlt;
+                              newImg.loading = "lazy";
+
+                              box.appendChild(newImg);
+
+                              const showImg = async () => {
+                                    await sleep(500);
+                                    box.classList.add("loaded");
+                              };
+
+                              if (newImg.complete && newImg.naturalWidth !== 0) {
+                                    showImg();
+                              } else {
+                                    newImg.onload = showImg;
+                              }
+                        }
                   },
-                  { threshold: 0 }
+                  { threshold: 0.5 }
             );
 
-            for (let i = 1; i <= total; i++) loadImage(i, observer);
+            initImage(observer);
 
             // wrapped with debounce to avoid hella rapid fire
-            gallery.addEventListener("click", debounce(viewPhoto, 100));
+            gallery.addEventListener("click", debounce(viewPhoto, 200));
 
             lightboxContainer.addEventListener("click", debounce(closePhoto, 200));
 
@@ -446,24 +479,25 @@ function handleGallery() {
             );
       })();
 
-      async function loadImage(index, observer) {
-            const heightFactor = window.innerHeight / 1080;
-            const box = document.createElement("div");
+      async function initImage(observer) {
+            for (let index = 1; index <= total; index++) {
+                  const heightFactor = window.innerHeight / 1080;
+                  const box = document.createElement("div");
 
-            box.className = "box";
-            box.dataset.imgSrc = `${folderPath}img-${index}.jpeg`;
-            box.dataset.imgAlt = `Gallery image ${index}`;
-            box.style.height = `${getRandomInt(100, 400 * heightFactor)}px`;
+                  box.className = "box";
+                  box.dataset.imgSrc = `${folderPath}img-${index}.jpeg`;
+                  box.dataset.imgAlt = `Gallery image ${index}`;
+                  box.style.height = `${getRandomInt(100, 400 * heightFactor)}px`;
 
-            observer.observe(box);
+                  observer.observe(box);
 
-            gallery.appendChild(box);
+                  gallery.appendChild(box);
 
-            await new Promise((res) => requestIdleCallback(res));
-            // less wait between img load calls
+                  await new Promise((res) => requestIdleCallback(res));
+            }
       }
 
-      async function interpolateLightbox(from, to, t) {
+      function interpolateLightbox(from, to, t) {
             const curr = {
                   top: lerp(from.top, to.top, t),
                   left: lerp(from.left, to.left, t),
@@ -489,64 +523,56 @@ function handleGallery() {
       async function viewPhoto(gallery) {
             const photo = gallery.target;
             const img = photo.firstChild;
-
-            const { top, left, width: w, height: h } = photo.getBoundingClientRect();
             const aspect = img.naturalWidth / img.naturalHeight;
+            const { top, left, width: w, height: h } = photo.getBoundingClientRect();
 
             // preload img
             lightbox.children[0].src = img.src;
-            if (!img.complete) await new Promise((res) => (img.onload = res));
-
-            Object.assign(lightbox.style, {
-                  top: `${top}px`,
-                  left: `${left}px`,
-                  width: `${w}px`,
-                  height: `${h}px`,
-            });
 
             opennedPhoto = photo;
 
-            lightboxContainer.classList.add("visible");
-            document.body.classList.add("no-scroll");
+            lightboxContainer.style.visibility = "visible";
             img.style.visibility = "hidden";
-            document.querySelector("nav").style.transform = "translateY(-99px)";
+            document.body.classList.add("no-scroll");
 
-            requestAnimationFrame(() => {
-                  sfxPlay("click");
-                  const from = {
-                        opacity: 0,
-                        top: top,
-                        left: left,
-                        width: w,
-                        height: h,
-                        rotateY: 0,
-                  };
+            sfxPlay("open", [10, 8, 16, 2]);
 
-                  const finalWidth = window.innerWidth > 600 ? 600 : window.innerWidth;
-                  const finalHeight = finalWidth / aspect;
-                  const to = {
-                        width: finalWidth,
-                        height: finalHeight,
-                        top: window.innerHeight / 2 - finalHeight / 2,
-                        left: window.innerWidth / 2 - finalWidth / 2,
-                        opacity: 1,
-                        rotateY: 360,
-                  };
+            const from = {
+                  opacity: 0,
+                  top: top,
+                  left: left,
+                  width: w,
+                  height: h,
+                  rotateY: 0,
+            };
 
-                  // wait next paint so styles apply b4 anim
+            const finalWidth = window.innerWidth > 600 ? 600 : window.innerWidth;
+            const finalHeight = finalWidth / aspect;
+            const to = {
+                  width: finalWidth,
+                  height: finalHeight,
+                  top: window.innerHeight / 2 - finalHeight / 2,
+                  left: window.innerWidth / 2 - finalWidth / 2,
+                  opacity: 1,
+                  rotateY: 360,
+            };
 
-                  animation?.destroy();
-                  animation = interpolate({
-                        onUpdate: (progress) => interpolateLightbox(from, to, progress),
-                        duration: easing.open.duration,
-                        easing: easing.open.solver,
-                  });
+            animation?.destroy();
+            animation = interpolate({
+                  onUpdate: (progress) => interpolateLightbox(from, to, progress),
+                  onStop: () => {
+                        document.querySelector("nav").style.transform = "translateY(-99px)";
+                        animation = null;
+                  },
+                  duration: easing.open.duration,
+                  easing: easing.open.solver,
             });
       }
 
       async function closePhoto() {
-            const photo = opennedPhoto;
+            if (animation?.getprogress < 0.7) return;
 
+            const photo = opennedPhoto;
             if (!photo) return;
 
             const img = photo.firstChild;
@@ -561,18 +587,20 @@ function handleGallery() {
                   rotateY: 0,
             };
 
+            sfxPlay("close", [19, 2, 10, 8]);
             // First, shrink the lightbox and hide it
-            animation?.destroy();
-
             document.querySelector("nav").style.transform = "translateY(0px)";
 
+            animation?.destroy();
             animation = interpolate({
                   onUpdate: (progress) => interpolateLightbox(from, to, progress),
                   onStop: () => {
+                        lightboxContainer.style.visibility = "hidden";
                         img.style.visibility = "visible";
                         lightboxContainer.classList.remove("visible");
                         document.body.classList.remove("no-scroll");
                         opennedPhoto = null;
+                        animation = null;
                   },
                   duration: easing.close.duration,
                   easing: easing.close.solver,
@@ -597,9 +625,10 @@ function mediaPlayer(video) {
       function defaultPlayer() {
             title.innerHTML = `<p><b>${artist}</b> - ${songName}<p> 
                                <p><b>${artist}</b> - ${songName}<p>`;
-            title.classList.add("animate");
+
             isOpening = false;
             if (id) clearTimeout(id);
+
             id = null;
       }
 
@@ -614,31 +643,42 @@ function mediaPlayer(video) {
             }, 10000);
       })();
 
-      player.addEventListener("click", () => {
-            instance.canClick = true;
-            player.classList.add("active");
-      });
-
       window.addEventListener("scroll", () => {
             instance.canClick = false;
             player.classList.remove("active");
+            title.classList.remove("animate");
       });
 
       document.addEventListener("click", (e) => {
             if (!player.contains(e.target)) {
                   instance.canClick = false;
                   player.classList.remove("active");
+                  title.classList.remove("animate");
+            } else {
+                  instance.canClick = true;
+                  player.classList.add("active");
+                  title.classList.add("animate");
             }
       });
 
-      control.addEventListener("click", () => {
+      control.addEventListener("click", async () => {
             if (!instance.canClick && !isOpening) return;
 
-            if (isOpening) defaultPlayer();
+            sfxPlay("cursor", [8, 6, 18]);
 
-            control.classList.remove("play-anim"); // reset it first
-            void control.offsetWidth; // force reflow to restart anim
-            control.classList.add("play-anim"); // trigger it again
+            if (isOpening) {
+                  defaultPlayer();
+                  instance.canClick = false;
+                  await sleep(300);
+
+                  setTimeout(() => {
+                        player.classList.remove("active");
+                  }, 250);
+            }
+
+            control.classList.remove("play-anim");
+            void control.offsetWidth;
+            control.classList.add("play-anim");
 
             if (music.paused) play();
             else pause();
@@ -760,7 +800,7 @@ function onScroll(main, navLinks, player, video) {
       const navLinks = document.querySelectorAll("nav ul li a");
       const video = document.querySelector("main #about .media-container video");
       const player = mediaPlayer(video);
-      sfxPlay = newSoundEffect({ click: "./assets/click.wav", cursor: "./assets/cursor.wav" });
+      sfxPlay = newSoundEffect({ open: "./assets/open.wav", close: "./assets/close.mp3", cursor: "./assets/cursor.wav" });
 
       const about = document.querySelector(`nav ul li a[href*="about"]`);
 
