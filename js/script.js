@@ -45,7 +45,8 @@ function newSoundEffect(sounds) {
 
             if (vibrate)
                   try {
-                        await navigator.vibrate(vibrate);
+                        const canVibrate = window.navigator.vibrate;
+                        if (canVibrate) window.navigator.vibrate(vibrate);
                   } catch {
                         console.log("Can't Vibrate: ", vibrate);
                   }
