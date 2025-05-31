@@ -1,4 +1,5 @@
 /* Utils */
+
 function lerp(a, b, t) {
       return a + (b - a) * t;
 }
@@ -11,6 +12,46 @@ function getRandomInt(min, max) {
       min = Math.ceil(min);
       max = Math.floor(max);
       return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function newSoundEffect(sounds) {
+      const audioCtx = new AudioContext();
+      const buffers = {};
+      let ready = false;
+
+      // preload All
+      const loadAll = async () => {
+            for (const [name, path] of Object.entries(sounds)) {
+                  const res = await fetch(path);
+                  const data = await res.arrayBuffer();
+
+                  buffers[name] = await audioCtx.decodeAudioData(data);
+            }
+
+            ready = true;
+      };
+
+      loadAll();
+
+      // Resume audio context on first interaction
+      window.addEventListener(
+            "pointerdown",
+            () => {
+                  if (audioCtx.state === "suspended") audioCtx.resume();
+            },
+            { once: true }
+      );
+
+      return (name) => {
+            if (!ready) return;
+            const buffer = buffers[name];
+            if (!buffer) return;
+
+            const src = audioCtx.createBufferSource();
+            src.buffer = buffer;
+            src.connect(audioCtx.destination);
+            src.start(0);
+      };
 }
 
 function spring(mass, stiffness, velocity, damping) {
@@ -97,6 +138,10 @@ function debounce(func, timeout = 300) {
             }, timeout);
       };
 }
+
+/* GLOVBAL */
+let sfxPlay;
+
 /* Screen Size */
 function handleUnsupportedScreen() {
       const pleasureText = "Im so sorry but....🥀 <br>.<br>.<br>.<br>.<br>.<br>.<br>.<br>.<br>.<br>.<br>.<br> YOUR SCREEN IS TOO SMALL LIL BRO GO GET NEW DEVICE!! 😭🥀🥀";
@@ -147,6 +192,7 @@ function handleCardAnimation() {
 
                         cards.forEach((card) => {
                               card.onclick = () => debouncedSelectCard(card);
+                              sfxPlay("cursor");
                         });
                   });
 
@@ -164,6 +210,9 @@ function handleCardAnimation() {
 
             swipeTracker.addEventListener("scroll", (e) => {
                   requestAnimationFrame(() => {
+                        let closestIndex = 0;
+                        let minDist = Infinity;
+
                         for (let i = 0; i < e.target.children.length; i++) {
                               const cardTracker = e.target.children[i];
                               const rect = cardTracker.getBoundingClientRect();
@@ -179,18 +228,25 @@ function handleCardAnimation() {
                               };
 
                               card.style.transform = `translateX(${to.translate}px) rotateY(${to.rotate}deg) scale(${to.scale})`;
-
                               card.style.opacity = to.opacity;
-
                               card.style.zIndex = cards.length - Math.round(Math.abs(factor));
 
                               let progress = 1 - Math.min(Math.abs(factor), 1);
                               interpolateDot(progress, i);
 
-                              if (Math.abs(factor) < 0.0001) {
-                                    currentCard = i;
-                                    changeBackgroundBlur();
+                              if (rect.x === 0) changeBackgroundBlur();
+
+                              // find card closest to center
+                              const dist = Math.abs(rect.x);
+                              if (dist < minDist) {
+                                    minDist = dist;
+                                    closestIndex = i;
                               }
+                        }
+
+                        if (closestIndex !== currentCard) {
+                              currentCard = closestIndex;
+                              sfxPlay("cursor");
                         }
                   });
             });
@@ -305,6 +361,7 @@ function handleCardAnimation() {
 /* Cta-Button */
 function handleCtaButton() {
       document.querySelector("main #hero .cta-button").onclick = () => {
+            sfxPlay("click");
             for (const section of Array.from(document.querySelector("main").children)) if (section.className !== "hero") section.style.display = section.dataset.display;
 
             const about = document.querySelector("main #about");
@@ -455,6 +512,7 @@ function handleGallery() {
             document.querySelector("nav").style.transform = "translateY(-99px)";
 
             requestAnimationFrame(() => {
+                  sfxPlay("click");
                   const from = {
                         opacity: 0,
                         top: top,
@@ -522,9 +580,78 @@ function handleGallery() {
       }
 }
 
-function handleWebScroll(main, navLinks) {
-      const video = document.querySelector("main #about .media-container video");
-      const music = (function playSong() {
+function mediaPlayer(video) {
+      const player = document.querySelector("#floating-player");
+      const title = document.querySelector("#floating-player .title .scroll-wrapper");
+      const control = document.querySelector("#floating-player .media-control");
+      const playIco = control.children[0];
+      const pauseIco = control.children[1];
+      const instance = { canPlay: false, canClick: false };
+
+      const songName = "When I Was A Boy";
+      const artist = "Tokyo Walker Music";
+
+      let isOpening = true;
+      let id;
+
+      function defaultPlayer() {
+            title.innerHTML = `<p><b>${artist}</b> - ${songName}<p> 
+                               <p><b>${artist}</b> - ${songName}<p>`;
+            title.classList.add("animate");
+            isOpening = false;
+            if (id) clearTimeout(id);
+            id = null;
+      }
+
+      // init
+      (() => {
+            title.innerHTML = " <p>Wanna play a chill song?</p>";
+            player.classList.add("active");
+
+            id = setTimeout(() => {
+                  player.classList.remove("active");
+                  defaultPlayer();
+            }, 10000);
+      })();
+
+      player.addEventListener("click", () => {
+            instance.canClick = true;
+            player.classList.add("active");
+      });
+
+      window.addEventListener("scroll", () => {
+            instance.canClick = false;
+            player.classList.remove("active");
+      });
+
+      document.addEventListener("click", (e) => {
+            if (!player.contains(e.target)) {
+                  instance.canClick = false;
+                  player.classList.remove("active");
+            }
+      });
+
+      control.addEventListener("click", () => {
+            if (!instance.canClick && !isOpening) return;
+
+            if (isOpening) defaultPlayer();
+
+            control.classList.remove("play-anim"); // reset it first
+            void control.offsetWidth; // force reflow to restart anim
+            control.classList.add("play-anim"); // trigger it again
+
+            if (music.paused) play();
+            else pause();
+
+            instance.canPlay = !music.paused;
+      });
+
+      function switchIcon() {
+            playIco.classList.toggle("active", music.paused);
+            pauseIco.classList.toggle("active", !music.paused);
+      }
+
+      const music = (function () {
             const audio = new Audio();
             audio.src = "./assets/lofi-song(When I Was A Boy).mp3";
             audio.type = "audio/mp3";
@@ -535,21 +662,44 @@ function handleWebScroll(main, navLinks) {
             });
 
             audio.loop = true;
-            audio.autoplay = true;
-
-            audio.play().catch((error) => {
-                  console.log("Error playing the song:", error);
-            });
 
             return audio;
       })();
 
-      video.loop = true;
+      const play = () => {
+            if (music.paused) {
+                  music.play().catch((error) => {
+                        console.log("Error playing the music:", error);
+                  });
+            }
 
-      const onVideo = debounce(() => {
-            // Pause the music if it's playing
+            if (!video.paused) {
+                  video.pause();
+            }
+
+            switchIcon();
+      };
+
+      const pause = () => {
             if (!music.paused) {
                   music.pause();
+            }
+
+            switchIcon();
+      };
+
+      instance.play = play;
+      instance.pause = pause;
+      instance.music = music;
+
+      return instance;
+}
+
+function onScroll(main, navLinks, player, video) {
+      const onVideo = () => {
+            // Pause the music if it's playing
+            if (!player.music.paused) {
+                  player.pause();
             }
             // Play the video if it's not playing
             if (video.paused) {
@@ -557,25 +707,23 @@ function handleWebScroll(main, navLinks) {
                         console.log("Error playing the video:", error);
                   });
             }
-      }, 200);
+      };
 
-      const onNotVideo = debounce(() => {
+      const onNotVideo = () => {
             video.currentTime = 0; // Reset video to start
             // Play the music if it's not playing
-            if (music.paused) {
-                  music.play().catch((error) => {
-                        console.log("Error playing the music:", error);
-                  });
+            if (player.music.paused && player.canPlay) {
+                  player.play();
             }
             // Pause the video if it's playing
             if (!video.paused) {
                   video.pause();
             }
-      }, 100);
+      };
 
       const sections = main.children;
 
-      window.onscroll = () => {
+      window.addEventListener("scroll", () => {
             let top = window.scrollY;
 
             for (const sec of sections) {
@@ -585,8 +733,6 @@ function handleWebScroll(main, navLinks) {
 
                   const vidRect = video.getBoundingClientRect();
                   const vidHalfHeight = vidRect.height / 2;
-
-                  console.log(vidHalfHeight);
 
                   if (-vidHalfHeight < vidRect.top && window.innerHeight - vidHalfHeight > vidRect.top) onVideo();
                   else onNotVideo();
@@ -604,7 +750,7 @@ function handleWebScroll(main, navLinks) {
                         if (activeLink) activeLink.classList.add("active");
                   }
             }
-      };
+      });
 }
 
 /* First Landing */
@@ -612,6 +758,9 @@ function handleWebScroll(main, navLinks) {
       // Hide all sections except hero on first landing
       const main = document.querySelector("main");
       const navLinks = document.querySelectorAll("nav ul li a");
+      const video = document.querySelector("main #about .media-container video");
+      const player = mediaPlayer(video);
+      sfxPlay = newSoundEffect({ click: "./assets/click.wav", cursor: "./assets/cursor.wav" });
 
       const about = document.querySelector(`nav ul li a[href*="about"]`);
 
@@ -631,7 +780,8 @@ function handleWebScroll(main, navLinks) {
       }
 
       // Handlers
-      handleWebScroll(main, navLinks);
+
+      onScroll(main, navLinks, player, video);
       handleUnsupportedScreen();
       handleCardAnimation();
       handleCtaButton();

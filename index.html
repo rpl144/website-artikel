@@ -7,6 +7,8 @@
             <title>Dua Warisan Satu Cerita</title>
             <link href="./css/font.css" rel="stylesheet" />
             <link href="./css/style.css" rel="stylesheet" />
+            <!-- Feather Icon -->
+            <script src="https://unpkg.com/feather-icons"></script>
       </head>
       <body>
             <nav>
@@ -17,7 +19,6 @@
                         <li><a href="#gallery">Gallery</a></li>
                   </ul>
             </nav>
-            <aside></aside>
             <main>
                   <section id="hero">
                         <div class="container">
@@ -125,6 +126,23 @@
                   </section>
             </main>
             <footer></footer>
+
+            <div id="floating-player">
+                  <div class="media-control">
+                        <i class="icon active" data-feather="play"></i>
+                        <i class="icon" data-feather="pause"></i>
+                  </div>
+                  <div class="title">
+                        <div class="scroll-wrapper">
+                              <p><b>Now playing - </b> Lofi chill</p>
+                        </div>
+                  </div>
+            </div>
+
             <script src="./js/script.js" type="module"></script>
+
+            <script>
+                  feather.replace();
+            </script>
       </body>
 </html>
