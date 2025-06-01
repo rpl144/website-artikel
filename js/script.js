@@ -745,8 +745,8 @@ function mediaPlayer(video) {
       const pauseIco = control.children[1];
       const instance = { canPlay: false, canClick: false };
 
-      const songName = "When I Was A Boy";
-      const artist = "Tokyo Walker Music";
+      const songName = "Chill lofi hip hop mix | Study, Work, Relax";
+      const artist = "nana(YouTube Channel)";
 
       let isOpening = true;
       let id;
@@ -780,6 +780,12 @@ function mediaPlayer(video) {
             instance.canClick = false;
             player.classList.remove("active");
             title.classList.remove("animate");
+      });
+
+      // Pause on tab hide, resume if it was playing
+      document.addEventListener("visibilitychange", () => {
+            if (document.hidden) pause();
+            else if (!music.paused) play().catch(() => {});
       });
 
       document.addEventListener("click", (e) => {
@@ -819,7 +825,7 @@ function mediaPlayer(video) {
       }
 
       const music = (() => {
-            const audio = new Audio("./assets/lofi-song(When I Was A Boy).mp3");
+            const audio = new Audio("./assets/lofi.opus");
 
             audio.loop = true;
             audio.preload = "auto";
@@ -827,12 +833,6 @@ function mediaPlayer(video) {
             audio.addEventListener("error", () => {
                   console.warn("Audio load failed. Retrying...");
                   audio.load();
-            });
-
-            // Pause on tab hide, resume if it was playing
-            document.addEventListener("visibilitychange", () => {
-                  if (document.hidden) audio.pause();
-                  else if (!audio.paused) audio.play().catch(() => {});
             });
 
             return audio;
