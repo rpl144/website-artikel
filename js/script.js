@@ -234,12 +234,8 @@ function handleCardAnimation() {
                   bindScrollToTracker();
             } else {
                   cards.forEach((card) => {
-                        const debouncedSelectCard = debounce(selectCard, 200);
-
-                        cards.forEach((card) => {
-                              card.onclick = () => debouncedSelectCard(card);
-                              sfxPlay("cursor");
-                        });
+                        card.onclick = () => debouncedSelectCard(card);
+                        sfxPlay("cursor");
                   });
 
                   moveDot(prevCard, currentCard);
