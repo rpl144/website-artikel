@@ -14,6 +14,12 @@ function getRandomInt(min, max) {
       return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
+function waitFrames(n = 1) {
+      return new Promise(async (res) => {
+            while (n-- > 0) await new Promise(requestAnimationFrame);
+            res();
+      });
+}
 function newSoundEffect(sounds) {
       const audioCtx = new AudioContext();
       const buffers = {};
@@ -34,6 +40,14 @@ function newSoundEffect(sounds) {
       loadAll();
 
       return async (name, vibrate) => {
+            if (vibrate)
+                  try {
+                        const canVibrate = window.navigator.vibrate;
+                        if (canVibrate) window.navigator.vibrate(vibrate);
+                  } catch {
+                        console.log("Can't Vibrate: ", vibrate);
+                  }
+
             if (!ready) return;
             const buffer = buffers[name];
             if (!buffer) return;
@@ -42,14 +56,6 @@ function newSoundEffect(sounds) {
             src.buffer = buffer;
             src.connect(audioCtx.destination);
             src.start(0);
-
-            if (vibrate)
-                  try {
-                        const canVibrate = window.navigator.vibrate;
-                        if (canVibrate) window.navigator.vibrate(vibrate);
-                  } catch {
-                        console.log("Can't Vibrate: ", vibrate);
-                  }
       };
 }
 
@@ -460,12 +466,9 @@ function handleGallery() {
             initBoxes(observer);
 
             // wrapped with debounce to avoid hella rapid fire
-            gallery.addEventListener(
-                  "click",
-                  debounce((e) => viewPhoto(e.target), 100)
-            );
+            gallery.addEventListener("click", viewPhoto);
 
-            lightboxContainer.addEventListener("click", debounce(closePhoto, 200));
+            lightboxContainer.addEventListener("click", closePhoto);
 
             document.addEventListener("keydown", (e) => {
                   if (e.key === "Escape" && opennedPhoto) closePhoto();
@@ -545,7 +548,7 @@ function handleGallery() {
                   const box = document.createElement("div");
 
                   box.className = "box";
-                  box.dataset.imgSrc = `${folderPath}img-${index}.jpeg`;
+                  box.dataset.imgSrc = `${folderPath}img-${index}.webp`;
                   box.dataset.imgAlt = `Gallery image ${index}`;
                   box.style.height = `${getRandomInt(100, 400 * heightFactor)}px`;
 
@@ -588,41 +591,23 @@ function handleGallery() {
             }
       }
 
-      async function viewPhoto(photo, shouldContinue) {
-            const img = photo.firstChild;
+      async function viewPhoto(e) {
+            if (isOpening && isAnimating) return;
 
+            const photo = e.target;
+            const img = photo.firstChild;
             if (!img) return;
 
             const aspect = img.naturalWidth / img.naturalHeight;
-            let from;
-
-            if (!shouldContinue) {
-                  if (isOpening && isAnimating) return;
-                  const { top, left, width: w, height: h } = photo.getBoundingClientRect();
-
-                  from = {
-                        opacity: 0,
-                        top: top,
-                        left: left,
-                        width: w,
-                        height: h,
-                        rotateY: 0,
-                  };
-
-                  // preload img
-                  if (lightbox.firstChild?.src !== img.src) {
-                        lightbox.innerHTML = "";
-                        lightbox.appendChild(img.cloneNode(true));
-
-                        // lightbox.firstChild.setAttribute("src", img.src);
-                        // await new Promise((res) => (lightbox.firstChild.onload = () => res()));
-                  }
-
-                  lightboxContainer.style.visibility = "visible";
-                  img.style.visibility = "hidden";
-                  document.body.classList.add("no-scroll");
-            } else from = currentVal;
-
+            const { top, left, width: w, height: h } = photo.getBoundingClientRect();
+            const from = {
+                  opacity: 0,
+                  top: top,
+                  left: left,
+                  width: w,
+                  height: h,
+                  rotateY: 0,
+            };
             const finalWidth = window.innerWidth > 600 ? 600 : window.innerWidth;
             const finalHeight = finalWidth / aspect;
             const to = {
@@ -634,14 +619,72 @@ function handleGallery() {
                   rotateY: 360,
             };
 
+            await new Promise((res) => {
+                  requestAnimationFrame(() => {
+                        lightbox.style.cssText = `
+                              top: ${top}px;
+                              left: ${left}px;
+                              width: ${w}px;
+                              height: ${h}px;
+                        `;
+                        res();
+                  });
+            });
+
+            // preload img
+            if (lightbox.firstChild?.src !== img.src) {
+                  lightbox.innerHTML = "";
+                  const clone = img.cloneNode(true);
+                  lightbox.appendChild(clone);
+                  if (!clone.complete) await clone.decode();
+            }
+
+            lightboxContainer.style.visibility = "visible";
+            img.style.visibility = "hidden";
+            document.body.classList.add("no-scroll");
             isOpening = true;
             opennedPhoto = photo;
 
             sfxPlay("open", [10, 8, 16, 2]);
             setAnimating(true);
+            await waitFrames(6);
+
             animation?.destroy();
             animation = interpolate({
-                  onUpdate: (progress) => interpolateLightbox(from, to, progress),
+                  onUpdate: async (progress) => interpolateLightbox(from, to, progress),
+                  onStop: () => {
+                        document.querySelector("nav").style.transform = "translateY(-99px)";
+                        setAnimating(false);
+                        animation = null;
+                        isOpening = false;
+                  },
+                  duration: easing.open.duration,
+                  easing: easing.open.solver,
+            });
+      }
+
+      async function openBackPhoto(photo) {
+            const img = photo.firstChild;
+            const aspect = img.naturalWidth / img.naturalHeight;
+            const finalWidth = window.innerWidth > 600 ? 600 : window.innerWidth;
+            const finalHeight = finalWidth / aspect;
+            const from = currentVal;
+            const to = {
+                  width: finalWidth,
+                  height: finalHeight,
+                  top: window.innerHeight / 2 - finalHeight / 2,
+                  left: window.innerWidth / 2 - finalWidth / 2,
+                  opacity: 1,
+                  rotateY: 360,
+            };
+
+            isOpening = true;
+
+            sfxPlay("open", [10, 8, 16, 2]);
+            setAnimating(true);
+            animation?.destroy();
+            animation = interpolate({
+                  onUpdate: async (progress) => interpolateLightbox(from, to, progress),
                   onStop: () => {
                         document.querySelector("nav").style.transform = "translateY(-99px)";
                         setAnimating(false);
@@ -658,8 +701,9 @@ function handleGallery() {
             const progress = animation?.getProgress() ?? 0;
 
             const shouldSkip = (isOpening && progress < 0.5) || (isAnimating && !isOpening);
-            const shouldOpen = isAnimating && !isOpening && progress > 0.1 && progress < 0.9;
-            if (shouldOpen && photo) return viewPhoto(photo, true);
+            const shouldOpenBack = isAnimating && !isOpening && progress > 0.1 && progress < 0.9;
+
+            if (shouldOpenBack && photo) return openBackPhoto(photo);
             if (shouldSkip || !photo) return;
 
             isOpening = false;
@@ -683,9 +727,10 @@ function handleGallery() {
             setAnimating(true);
             animation?.destroy();
             animation = interpolate({
-                  onUpdate: (progress) => interpolateLightbox(from, to, progress),
+                  onUpdate: async (progress) => interpolateLightbox(from, to, progress),
                   onStop: async () => {
-                        lightboxContainer.style.visibility = "hidden";
+                        requestAnimationFrame(() => (lightboxContainer.style.visibility = "hidden"));
+
                         img.style.visibility = "visible";
                         document.body.classList.remove("no-scroll");
                         opennedPhoto = null;
@@ -752,6 +797,7 @@ function mediaPlayer(video) {
                   instance.canClick = true;
                   player.classList.add("active");
                   title.classList.add("animate");
+                  sfxPlay("none", [10, 8, 19, 2]);
             }
       });
 
@@ -763,8 +809,9 @@ function mediaPlayer(video) {
             if (isOpening) defaultPlayer();
 
             control.classList.remove("play-anim");
-            void control.offsetWidth;
-            control.classList.add("play-anim");
+            requestAnimationFrame(() => {
+                  control.classList.add("play-anim");
+            });
 
             if (music.paused) play();
             else pause();
