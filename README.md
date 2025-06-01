@@ -17,7 +17,7 @@ Built with pure HTML, CSS, and JS — no frameworks, no fluff.
 - 🎨 **Dynamic Layout** — Grid/column layout with spacing, all done manually
 - 📱 **Gesture Support** — swipe back and forth smoothly
 - 📳 **Haptic Feedback** — Just like ios, bring touch more alive (may not work on some devices)
-- 🎵 **Floating Music Player** — Lo-fi(https://www.youtube.com/watch?v=te7UWQtJ5Ac) song to bring you calm and relax!
+- 🎵 **Floating Music Player** — [Lo-fi](https://www.youtube.com/watch?v=te7UWQtJ5Ac) song to bring you calm and relax!
 - 🧠 **Touch-Optimized Transitions** — Built to feel smooth for every touch
 
 ## 📁 Technologies Used
