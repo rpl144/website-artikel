@@ -466,9 +466,9 @@ function handleGallery() {
             initBoxes(observer);
 
             // wrapped with debounce to avoid hella rapid fire
-            gallery.addEventListener("click", viewPhoto);
+            gallery.addEventListener("click", debounce(viewPhoto, 50));
 
-            lightboxContainer.addEventListener("click", closePhoto);
+            lightboxContainer.addEventListener("click", debounce(closePhoto, 100));
 
             document.addEventListener("keydown", (e) => {
                   if (e.key === "Escape" && opennedPhoto) closePhoto();
@@ -728,9 +728,8 @@ function handleGallery() {
             animation?.destroy();
             animation = interpolate({
                   onUpdate: async (progress) => interpolateLightbox(from, to, progress),
-                  onStop: async () => {
-                        requestAnimationFrame(() => (lightboxContainer.style.visibility = "hidden"));
-
+                  onStop: () => {
+                        lightboxContainer.style.visibility = "hidden";
                         img.style.visibility = "visible";
                         document.body.classList.remove("no-scroll");
                         opennedPhoto = null;
@@ -824,17 +823,22 @@ function mediaPlayer(video) {
             pauseIco.classList.toggle("active", !music.paused);
       }
 
-      const music = (function () {
-            const audio = new Audio();
-            audio.src = "./assets/lofi-song(When I Was A Boy).mp3";
-            audio.type = "audio/mp3";
-
-            audio.addEventListener("error", function () {
-                  audio.src = "./assets/lofi-song(When I Was A Boy).mp3";
-                  audio.type = "audio/mp3";
-            });
+      const music = (() => {
+            const audio = new Audio("./assets/lofi-song(When I Was A Boy).mp3");
 
             audio.loop = true;
+            audio.preload = "auto";
+
+            audio.addEventListener("error", () => {
+                  console.warn("Audio load failed. Retrying...");
+                  audio.load();
+            });
+
+            // Pause on tab hide, resume if it was playing
+            document.addEventListener("visibilitychange", () => {
+                  if (document.hidden) audio.pause();
+                  else if (!audio.paused) audio.play().catch(() => {});
+            });
 
             return audio;
       })();
