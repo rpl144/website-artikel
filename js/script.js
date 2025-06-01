@@ -628,18 +628,15 @@ function handleGallery() {
             });
 
             // preload img
-            if (lightbox.firstChild?.src !== img.src) {
-                  lightbox.innerHTML = "";
-                  const clone = img.cloneNode(true);
-                  lightbox.appendChild(clone);
-                  if (!clone.complete) await clone.decode();
+            if (lightbox.firstChild.src !== img.src) {
+                  lightbox.firstChild.src = img.src;
             }
 
-            lightboxContainer.style.visibility = "visible";
-            img.style.visibility = "hidden";
+            lightboxContainer.classList.add("visible");
             document.body.classList.add("no-scroll");
-            isOpening = true;
+            img.style.visibility = "hidden";
             opennedPhoto = photo;
+            isOpening = true;
 
             sfxPlay("open", [10, 8, 16, 2]);
             setAnimating(true);
@@ -725,12 +722,13 @@ function handleGallery() {
             animation = interpolate({
                   onUpdate: async (progress) => interpolateLightbox(from, to, progress),
                   onStop: () => {
-                        lightboxContainer.style.visibility = "hidden";
                         img.style.visibility = "visible";
-                        document.body.classList.remove("no-scroll");
                         opennedPhoto = null;
                         animation = null;
                         setAnimating(false);
+
+                        lightboxContainer.classList.remove("visible");
+                        document.body.classList.remove("no-scroll");
                   },
                   duration: easing.close.duration,
                   easing: easing.close.solver,

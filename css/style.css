@@ -732,6 +732,10 @@ main #gallery .lightbox-container {
       margin-right: auto;
 }
 
+main #gallery .lightbox-container.visible {
+      visibility: visible;
+}
+
 main #gallery .lightbox-container .lightbox {
       position: absolute;
       top: 0px;
