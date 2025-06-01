@@ -14,7 +14,7 @@ Built with pure HTML, CSS, and JS — no frameworks, no fluff.
 
 - 🧼 **Clean & Responsive UI** — Looks good on phones, tablets, and desktops
 - ⚡ **Lazy Loaded Gallery** — Smart image loads, smoother scroll maybe
-- 🎨 **Dynamic Layout** — Grid/column layout with spacing, all done manually 💀
+- 🎨 **Dynamic Layout** — Grid/column layout with spacing, all done manually
 - 📱 **Gesture Support** — swipe like a mobile app
 - 📳 **Haptic Feedback** — If your phone got it, it vibin’ (not on all devices tho)
 - 🎥 **Floating Media Player** — Listening while reading’
