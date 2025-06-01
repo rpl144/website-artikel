@@ -207,7 +207,7 @@ function handleUnsupportedScreen() {
 
 function handleCardAnimation() {
       // constants
-      const translationOffset = 200;
+      const translationOffset = window.innerWidth > 900 ? 150 : 200;
       const rotationOffset = -15;
       const scaleOffset = -0.2;
       const opacityOffset = -0.5;
@@ -230,12 +230,12 @@ function handleCardAnimation() {
       let currentCard = 1;
 
       (function init() {
-            if (window.innerWidth < 900) {
+            if (window.innerWidth < 700) {
                   bindScrollToTracker();
             } else {
                   cards.forEach((card) => {
+                        const debouncedSelectCard = debounce(selectCard, 200);
                         card.onclick = () => debouncedSelectCard(card);
-                        sfxPlay("cursor");
                   });
 
                   moveDot(prevCard, currentCard);
@@ -317,6 +317,7 @@ function handleCardAnimation() {
 
       function selectCard(card) {
             const cardsArray = Array.from(cards);
+            sfxPlay("cursor");
 
             prevCard = currentCard;
             currentCard = cardsArray.findIndex((c) => c === card);
