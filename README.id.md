@@ -12,7 +12,6 @@ Dibuat dengan HTML, CSS, & JS murni — tanpa framework, tanpa ribet.
 - 🎨 **Layout Dinamis** — Grid/kolom yang rapi, semuanya diatur manual 💀
 - 📱 **Dukungan Gesture** — Bisa swipe kayak aplikasi mobile
 - 📳 **Getar Haptic** — Kalo HP lo support, pas klik ada getaran (ga semua bisa sih)
-- 🎥 **Pemutar Media Melayang** — Bisa dengerin sambil baca
 - 💨 **Tanpa Framework** — Cuma HTML/CSS/JS doang asli dari jalanan
 - 🧠 **Transisi Optimasi Sentuhan** — Dibuat biar tap-nya kerasa smooth
 
@@ -36,4 +35,4 @@ Dibuat iseng ngide awokawok.
 
 ---
 
-Bikin ini karna gabut rek. Btw ini pake chatGPT buat bikin README.md nya biar gak cape
+Bikin ini karna gabut rek. Page readme ini dibuat oleh AI.
