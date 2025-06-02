@@ -41,6 +41,16 @@ body {
       background: rgb(14, 10, 11);
 }
 
+.container a {
+      -webkit-tap-highlight-color: transparent;
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      -khtml-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+}
+
 @media (min-width: 560px) {
       body {
             padding: 40px 70px;
@@ -161,8 +171,6 @@ body {
       font-weight: 200;
       text-decoration: none;
       color: inherit;
-
-      user-select: none;
 
       transition: all 500ms ease;
 }
