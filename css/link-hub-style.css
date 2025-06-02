@@ -51,41 +51,6 @@ body {
       user-select: none;
 }
 
-@media (min-width: 560px) {
-      body {
-            padding: 40px 70px;
-            justify-content: center;
-      }
-
-      .container::before,
-      .container::after {
-            content: "";
-
-            position: absolute;
-            top: -2px;
-            bottom: -2px;
-            left: -2px;
-            right: -2px;
-            z-index: -2;
-
-            border-radius: 12px;
-
-            background: conic-gradient(from var(--angle), rgba(255, 236, 208, 0.2), rgb(238, 233, 226) 20%, rgba(255, 236, 208, 0.2) 30%);
-
-            animation: 3s spin linear infinite;
-      }
-
-      .container::before {
-            filter: blur(2.5rem);
-            opacity: 0.1;
-      }
-
-      .container .button:hover {
-            border: 2px solid rgba(245, 245, 245, 0.8);
-            transform: scale(0.95);
-      }
-}
-
 .container h1 {
       font-size: 3rem;
       font-family: LeagueSpartan;
@@ -187,6 +152,48 @@ body {
       animation: tilt-n-move-shaking 500ms linear 1 forwards;
 }
 
+@property --angle {
+      syntax: "<angle>";
+      initial-value: 0deg;
+      inherits: false;
+}
+
+@media (min-width: 560px) {
+      body {
+            padding: 40px 70px;
+            justify-content: center;
+      }
+
+      .container::before,
+      .container::after {
+            content: "";
+
+            position: absolute;
+            top: -2px;
+            bottom: -2px;
+            left: -2px;
+            right: -2px;
+            z-index: -2;
+
+            border-radius: 12px;
+
+            background: conic-gradient(from var(--angle), rgba(255, 236, 208, 0.2), rgb(238, 233, 226) 20%, rgba(255, 236, 208, 0.2) 30%);
+
+            animation: 3s spin linear infinite;
+      }
+
+      .container::before {
+            filter: blur(2.5rem);
+            opacity: 0.1;
+      }
+
+      .container .button:hover {
+            border: 2px solid rgba(245, 245, 245, 0.8);
+            transform: scale(0.95);
+            animation: none;
+      }
+}
+
 @keyframes tilt-n-move-shaking {
       0% {
             transform: translate(0, 0) rotate(0deg);
@@ -206,11 +213,6 @@ body {
       100% {
             transform: translate(0, 0) rotate(0deg);
       }
-}
-@property --angle {
-      syntax: "<angle>";
-      initial-value: 0deg;
-      inherits: false;
 }
 
 @keyframes click-bounce {
