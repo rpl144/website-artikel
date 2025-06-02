@@ -79,6 +79,11 @@ body {
             filter: blur(2.5rem);
             opacity: 0.1;
       }
+
+      .container .button:hover {
+            border: 2px solid rgba(245, 245, 245, 0.8);
+            transform: scale(0.95);
+      }
 }
 
 .container h1 {
@@ -126,8 +131,7 @@ body {
 }
 
 .container .button:hover {
-      border: 2px solid rgba(245, 245, 245, 0.8);
-      transform: scale(0.95);
+      animation: click-bounce 0.4s cubic-bezier(0.46, 0.28, 0.18, 0.87);
 }
 
 .container .button .icon {
@@ -207,6 +211,21 @@ body {
       syntax: "<angle>";
       initial-value: 0deg;
       inherits: false;
+}
+
+@keyframes click-bounce {
+      0% {
+            border: 2px solid rgba(245, 245, 245, 0.4);
+            transform: scale(1);
+      }
+      50% {
+            border: 2px solid rgba(245, 245, 245, 0.8);
+            transform: scale(0.95);
+      }
+      100% {
+            border: 2px solid rgba(245, 245, 245, 0.4);
+            transform: scale(1);
+      }
 }
 
 @keyframes spin {
