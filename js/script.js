@@ -629,10 +629,20 @@ function handleGallery() {
             });
 
             // preload img
-            if (lightbox.firstChild.src !== img.src) {
-                  lightbox.firstChild.src = img.src;
-            }
+             if (!lightbox.firstChild || lightbox.firstChild.src !== img.src) {
+        lightbox.innerHTML = '';
 
+        const lbImg = new Image();
+        lbImg.src = img.src;
+        lbImg.alt = img.alt || '';
+
+        await lbImg.decode();
+
+        lightbox.appendChild(lbImg);
+    }
+            
+            
+            
             lightboxContainer.classList.add("visible");
             document.body.classList.add("no-scroll");
             img.style.visibility = "hidden";
